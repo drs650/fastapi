@@ -46,7 +46,7 @@ class Performance(Base):
     last_changed_date = Column(Date, nullable=False)
 
     # player 테이블의 player_id를 참조하는 외래키(FK)
-    Player_id = Column(Integer, ForeignKey('player.player_id'))
+    player_id = Column(Integer, ForeignKey('player.player_id'))
 
     player = relationship('Player', back_populates='performances') # 1:N 관계
 
@@ -59,7 +59,7 @@ class League(Base):
     league_id = Column(Integer, primary_key=True, index=True)
     league_name = Column(String, nullable=False)
     scoring_type = Column(String, nullable=False)
-    last_changes_date = Column(Date, nullable=False)
+    last_changed_date = Column(Date, nullable=False)
 
     # 1(리그):N(팀)관계 - 한 리그 안에 티밍 여러개 (일대다)
     teams = relationship('Team', back_populates='league')
