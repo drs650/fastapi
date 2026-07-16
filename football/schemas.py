@@ -37,7 +37,7 @@ class PlayerBase(BaseModel):
 class Player(PlayerBase):
     model_config = ConfigDict(from_attributes=True)
 
-    performances = List[Performance] = Field(default_factory=list)
+    performances : List[Performance] = Field(default_factory=list)
 
 # 팀 기본 정보 - 리그 응답 안에 팀 목록을 넣을 때도 이 모델을 재사용
 class TeamBase(BaseModel):
@@ -45,7 +45,7 @@ class TeamBase(BaseModel):
     league_id : int
     team_id : int
     team_name : str
-    last_changed_date = date
+    last_changed_date : date
 
 # 팀 상세 응답 - 팀 기본 정보에 선수 목록을 함께 포함한다.
 class Team(TeamBase):
