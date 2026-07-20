@@ -1,26 +1,19 @@
-# ======================================================
+# ================================================================================
 # steam_games/pipeline.py
-#
-# Steam 게임 데이터 저장 파이프라인 통합 실행
-#   1) 저장 구조(재)설계  2) CSV 배치 적재  3) 적재 검증
-# ======================================================
-
-from database import init_db
-from loader import load_from_csv
-from verify import verify
+#   - 배치 처리 -> 이벤트 처리 순서로 전체 파이프라인을 한 번에 실행한다.
+# ================================================================================
+from batch_processor import run_batch_processing
+from event_processor import run_event_processing
 
 
-def main():
-    print('1) 저장 구조 재설계 (기본키 + UNIQUE/FK 제약 적용)')
-    init_db()
-
+def main() -> None:
+    run_batch_processing()
     print()
-    print('2) games.csv 배치 적재')
-    load_from_csv()
-
+    run_event_processing()
     print()
-    print('3) 적재 검증')
-    verify()
+    print('[pipeline] 처리 파이프라인 완료')
+    print('pgAdmin Query Tool에서 SELECT COUNT(*)로 결과 테이블을 확인하거나,')
+    print('python verify_processing.py 로 자동 검증할 수 있습니다.')
 
 
 if __name__ == '__main__':
