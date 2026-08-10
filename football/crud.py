@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from datetime import date
 
-import models
+import todo.models as models
 
 def get_player(db: Session, player_id: int):
     """
