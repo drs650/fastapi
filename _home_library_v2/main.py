@@ -50,7 +50,7 @@ def lookup_book(isbn: str, db: Session = Depends(get_db)):
 
     existing_book = db.scalar(select(Book).where(Book.isbn == validated_isbn)) # 같은 책을 찾는 것
 
-    if existing_book: # 중복된 책이 있따면 409에러 발생 -> duplicate_detail 헬퍼 함수 호출
+    if existing_book: # 중복된 책이 있다면 409에러 발생 -> _duplicate_detail 헬퍼 함수 호출
         raise HTTPException(status.HTTP_409_CONFLICT, _duplicate_detail(existing_book))
 
     metadata = lookup_metadata(validated_isbn)
@@ -118,7 +118,7 @@ def register_book(isbn: str=Form(...), image: UploadFile=File(...), db: Session=
         status_value = 'confirmed'
     else:
         title = f'수동 등록: ISBN {validated_isbn} (서지정보 조회 실패)'
-        auther = None
+        author = None
         publisher = None
         status_value = 'needs_review'
 

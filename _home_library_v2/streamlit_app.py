@@ -50,3 +50,27 @@ st.divider()  # 구분선
 
 # 2단계 : ISBN + 표지 사진을 한 폼에서 함께 등록
 st.header('2단계: ISBN + 표지 사진 함께 등록하기')
+
+with st.form('register_form'):
+    form_isbn = st.text_input('ISBN 입력')
+    form_image = st.file_uploader('표지 사진')
+    submitted = st.form_submit_button('등록하기')
+
+if submitted:
+    if not form_isbn:
+        st.warning('ISBN을 입력해주세요!')
+    elif form_image is None:
+        st.warning('표지 사진을 선택해주세요!')
+    else:
+        r = requests.post(
+            f'{API}/books/register',
+            data={'isbn': form_isbn},
+            files={'image': (form_image.name, form_image.getvalue(), form_image.type)},
+        )
+        show_response(r)
+
+st.divider()
+
+st.subheader('등록된 책')
+for book in requests.get(f'{API}/books').json():
+    st.write(f'{book["title"]} ({book["recognition_status"]})')
