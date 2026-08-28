@@ -27,6 +27,7 @@ worldcup-api/
 │   ├── matches.py            # 경기 조회
 │   ├── teams.py               # 팀 조회
 │   └── stats.py                # pandas 통계
+├── streamlit_api/              # streamlit 모델(하위 항목에서 추가 설명)
 ├── data/                       # players.csv, matches.csv, teams.csv
 ├── schema.sql                  # 테이블 정의 (한국어 컬럼 코멘트 포함, 전체 컬럼 버전)
 ├── setup_database.py           # schema.sql 실행 + CSV 적재
@@ -41,6 +42,11 @@ uvicorn main:app --reload
 
 쓰기(POST/PUT/DELETE) API는 로그인이 필요합니다. `/docs` 우측 상단 **Authorize** 버튼 클릭 →
 `username: admin`, `password: admin1234` (`.env`에서 변경 가능)로 로그인하면 이후 요청에 토큰이 자동으로 붙습니다.
+
+```bash
+streamlit run app.py
+```
+Streamlit 서버 실행
 
 ---
 
@@ -129,10 +135,105 @@ uvicorn main:app --reload
 
 ---
 
-## 6. 팀원별 작업 내용
+### 7. load_csv에서 UTF-8 인코딩 실패
+- **시도**:setup_database.py파일을 python으로 실행
+- **문제점**: csv파일 하나가 UTF-8 형태가 아니라 인코딩 실패
+- **해결방안**: UTF-8형태로 우선 인코딩 하고 인코딩 실패한 csv파일은 CP949로 재시도하는 코드 작성
+
+---
+
+### 8. `players`, `playersE` 두 개 테이블 중복 생성
+- **시도**: setup_database.py파일을 python으로 실행
+- **문제점**: playerse와 playersE 테이블 두개 생성
+- **해결방안**: 테이블명을 `playerse`(소문자)로 통일
+
+---
+
+### 9. `setup_database.py` 재실행 시
+- **시도**: Streamlit에서 한국어 이름으로 선수 검색
+- **문제점**: 선수 이름을 영어에서 한국어로 표기하는 과정에서 사람마다 표기법이 달라(예: "손흥민"을 영어 발음대로 다르게 표기하는 경우 등), 사용자가 알고 있는 영어 이름으로는 검색이 되지 않는 경우 발생
+- **해결방안**: 영어 이름이 담긴 `playerse` CSV를 별도 테이블로 추가하고, `players_id`(PK)로 두 테이블을 매칭. SQLAlchemy의 `or_`를 사용해 한글 이름 또는 영어 이름 중 하나라도 일치하면 검색되도록 수정하고, `ilike`로 대소문자 구분 없는 부분 검색도 가능하도록 개선
+
+---
+
+### 10. 한국어로만 선수 검색 시, 사람마다 다른 영어 표기법 때문에 조회 안 되는 문제
+- **시도**: streamlit에서 한국어로 선수 검색
+- **문제점**: 영어를 한국어로 변경했기 때문에 사람마다 표기법이 달라 검색이 안 되는 경우 발생
+- **해결방안**: 영어로 된 csv파일을 추가하고 or_ 코드를 통해 영어로 검색해도 선수가 검색되도록 수정 가능, ilike 코드를 통해 부분적인 검색도 가능하도록 수정
+
+---
+
+## 6. 스트림릿 구조 및 설명
+
+`Streamlit_api` 폴더는 FastAPI에서 제공하는 월드컵 API를 사용하여
+사용자가 선수, 국가, 경기 및 통계 정보를 쉽게 조회할 수 있도록 만든 streamlit 웹 애플리케이션입니다.
+
+전체적인 데이터 흐름은 다음과 같습니다.
+
+PostgreSQL -> FastAPI -> Streamlit -> 사용자 화면
+
+Streamlit에서 직접 PostgreSQL을 조회하는 것이 아니라 `api_client.py`을 통해 FastAPI 엔드포인트를 호출하고 전달받은 
+Json 데이터를 화면에 출력합니다.
+
+
+### 1. 폴더 구조
+```
+streamlit_api
+ ┣ data
+ ┃ ┗ matches.csv
+ ┣ pages
+   ┣ home.py
+   ┣ home.zip
+   ┣ matches.py
+   ┣ player_detail.py
+   ┣ player_search.py
+   ┣ stats.py
+   ┗ teams.py
+```
+----
+
+`app.py` : streamlit 애플리케이션의 시작 파일이며 각 페이지로 이동할 수 있는 메뉴를 구성합니다.
+
+`api_client.py` : FastAPI 서버에 ATTP 요청을 보내고 선수, 경기, 국가, 통계 데이터를 받아오는 역할
+
+`pages/home.py` : 프로젝트 소개 및 주요 기능을 보여주는 메인 화면 입니다
+
+`pages/player_search.py` : 선수 이름, 국가, 포지션 등의 조건으로 선수를 검색하고 정렬할 수 있는 화면입니다.
+
+`pages/player_detail.py` : 선택한 선수의 국가, 포지션, 나이, 소속 클럽, 경기 수, 득점, 도움 등의 상세 정보를 보여줍니다.
+
+`pages/matches.py` : 월드컵 경기 목록 및 경기 정보를 조회하는 화면입니다.
+
+`pages/teams.py` : 참가 국가를 검색하고 국가별 정보를 조회하는 화면입니다.
+
+`pages/stats.py` : 훨드컵 최종 순위와 선수 득점 관련 통계를 표와 그래프로 시각화 하는 화면입니다.
+
+---
+### 2. 주요기능
+
+- 선수 이름 검색
+- 국가별 선수 검색
+- 포지션별 선수 검색
+- 선수 목록 정렬
+- 선수 상세 정보 조회
+- 월드컵 경기 조회
+- 참가 국가 조회
+- 월드컵 최종 순위 확인
+- 선수 득점 통계 조회 및 시각화
+
+---
+
+### 3.구현목적
+FastAPI의 API 기능을 Swagger에서만 확인하는 것에 그치지 않고,\
+Streamlit을 이용해 실제 사용자가 월드컵 데이터를 검색하고 확인할 수 있는 웹 화면을 구현했습니다.
+
+
+
+## 7. 팀원별 작업 내용
 
 | 팀원 | 담당 |
 |---|---|
-| 김수완 | |
-| 장호균 | 
-| 태두혁 |
+| 김수완 | api 코드 작성|
+| 장호균 | streamlit 코드 작성|
+| 태두혁 | ppt제작 및 api 기능 추가|
+| 공동작업| 주제선정, 전체적인 코드 검토 및 오류 수정|
