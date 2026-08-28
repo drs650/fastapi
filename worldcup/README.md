@@ -121,6 +121,14 @@ uvicorn main:app --reload
 
 ---
 
+### 6. Streamlit을 실행 시켰을 때 404에러가 뜸
+
+- **시도**: uvicorn실행 후 streamlit 실행
+- **문제점**: FastAPI에 연결할 수 없다고 뜸. `404 Not Found` 발생
+- **해결방안**: Streamlit에서 헬스체크하려고 요청을 하였으나 `/health`엔드 포인트가 존재하지않아 오류가 발생. `main.py`에 `@app.get("/health")` 문구 작성
+
+---
+
 ## 6. 팀원별 작업 내용
 
 | 팀원 | 담당 |
